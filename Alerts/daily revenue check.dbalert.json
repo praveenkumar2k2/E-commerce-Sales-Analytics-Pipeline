@@ -1,0 +1,32 @@
+{
+  "evaluation": {
+    "source": {
+      "name": "revenue",
+      "display": "source",
+      "aggregation": "SUM"
+    },
+    "comparison_operator": "LESS_THAN",
+    "threshold": {
+      "value": {
+        "double_value": 200.0
+      }
+    },
+    "notification": {
+      "retrigger_seconds": 0,
+      "notify_on_ok": true
+    }
+  },
+  "schedule": {
+    "quartz_cron_schedule": "25 0 10 * * ?",
+    "timezone_id": "Asia/Calcutta"
+  },
+  "query_lines": [
+    "SELECT ",
+    "SUM(product_price + freight_value) AS revenue",
+    "FROM ecommerce_catalog.gold.fact_sales",
+    "WHERE order_date = (",
+    "    SELECT MAX(order_date) ",
+    "    FROM ecommerce_catalog.gold.fact_sales",
+    ");"
+  ]
+}

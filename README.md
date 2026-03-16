@@ -1,381 +1,287 @@
-# E-commerce-Sales-Analytics-Pipeline
+# E-commerce-Sales
+
+# E-commerce Sales Analytics Pipeline
+
 ## Project Overview
 
-This project implements an end-to-end **Data Engineering pipeline** for analyzing e-commerce sales data using **AWS, Databricks, PySpark, Delta Lake, and SQL**.
+The E-commerce Sales Analytics Pipeline is an end-to-end Data Engineering project designed to process raw transactional data from an e-commerce marketplace and transform it into analytics-ready datasets for reporting and business insights.
 
-The pipeline ingests raw transactional data from **AWS S3**, processes it using **Databricks**, and transforms it through the **Medallion Architecture (Bronze → Silver → Gold)** to produce **analytics-ready datasets**.
+The pipeline follows the Medallion Architecture (Bronze → Silver → Gold) using the Databricks Lakehouse platform. Raw data is ingested from AWS S3, processed using PySpark, stored in Delta Lake tables, and structured into a Star Schema model for analytics.
 
-The final **Gold Layer** is designed using a **Star Schema** to support business analytics, dashboards, and reporting.
-
----
-
-## Business Objective
-
-The objective of this pipeline is to enable business teams to analyze:
-
-* Sales performance trends
-* Customer purchasing behavior
-* Product demand patterns
-* Seller performance
-* Logistics and delivery efficiency
-
-The Gold Layer generates **business insights and analytics datasets** used for dashboards and strategic decision making.
+This system enables organizations to analyze sales performance, customer behavior, and product trends efficiently.
 
 ---
 
-## Architecture Overview
+## Project Objectives
 
-```
-Raw Data Source (CSV files)
-        │
-        ▼
-AWS S3 Data Lake
-        │
-        ▼
-Databricks Ingestion (PySpark)
-        │
-        ▼
-Bronze Layer
-Raw Delta Tables
-        │
-        ▼
-Silver Layer
-Cleaned and Transformed Data
-        │
-        ▼
-Gold Layer
-Star Schema (Fact + Dimension Tables)
-        │
-        ▼
-Business Insights
-        │
-        ▼
-Dashboards / Analytics
-```
+- Build a scalable batch ETL pipeline for e-commerce data
+- Process raw transactional datasets stored in AWS S3
+- Apply data cleaning, transformation, and validation
+- Design an analytics-ready star schema model
+- Generate business insights and dashboards
+- Automate pipeline execution using Databricks Workflows
 
 ---
 
-## Medallion Architecture
+## System Architecture
 
-This project follows the **Medallion Architecture**, a standard pattern used in modern data engineering systems.
+The pipeline follows a modern Lakehouse Data Engineering Architecture.
 
-### Bronze Layer (Raw Data)
+<img width="1536" height="1024" alt="ChatGPT Image Mar 13, 2026, 12_04_29 AM" src="https://github.com/user-attachments/assets/3dbaa5fa-dbd0-485a-8458-8311e57b9587" />
 
-Purpose:
-
-* Store raw data ingested from the source
-* Maintain historical raw datasets
-* Minimal transformation
-
-Characteristics:
-
-* Data stored as **Delta tables**
-* Append-only ingestion
-* Schema inference applied
-
-Example Bronze Tables:
-
-* bronze_customers
-* bronze_orders
-* bronze_order_items
-* bronze_payments
-* bronze_products
-* bronze_sellers
-
----
-
-### Silver Layer (Data Cleaning & Transformation)
-
-Purpose:
-
-* Clean and standardize raw data
-* Apply data quality checks
-* Remove duplicates and handle missing values
-
-Transformations include:
-
-* Null handling
-* Data type conversion
-* Timestamp standardization
-* Deduplication
-* Data validation
-
-Example Silver Tables:
-
-* customers_clean
-* orders_clean
-* order_items_clean
-* payments_clean
-* products_clean
-* sellers_clean
-
----
-
-### Gold Layer (Analytics Layer)
-
-Purpose:
-
-* Create analytics-ready datasets
-* Build dimensional data model
-* Enable business intelligence queries
-
-The Gold layer is designed using **Star Schema modeling**.
-
-Fact Table:
-
-fact_sales
-
-Dimension Tables:
-
-* dim_customers
-* dim_products
-* dim_sellers
-* dim_orders
-* dim_date
-
-This model enables efficient analytical queries such as revenue trends, product performance, and customer behavior analysis.
-
----
-
-## Star Schema Data Model
-
-```
-              dim_customers
-                     │
-                     │
-dim_products ─── fact_sales ─── dim_sellers
-                     │
-                     │
-                  dim_orders
-                     │
-                     │
-                   dim_date
-```
-
-Fact Table Grain:
-
-One row per **order item purchased**.
-
-Metrics stored in fact table:
-
-* product price
-* freight value
-* payment value
-
----
-
-## Data Pipeline Workflow
-
-### Step 1 – Data Ingestion
-
-Raw CSV datasets are uploaded to **AWS S3 Raw Zone**.
-
-Example path:
-
-```
-s3://ecommerce-data-lake/raw/
-```
-
-Databricks reads these files using **PySpark**.
-
----
-
-### Step 2 – Bronze Layer Creation
-
-Raw CSV files are converted into **Delta tables**.
-
-Example process:
-
-```
-CSV → Spark DataFrame → Delta Table
-```
-
-Delta format provides:
-
-* ACID transactions
-* Schema enforcement
-* Time travel
-* Scalable storage
-
----
-
-### Step 3 – Silver Layer Transformation
-
-Data cleaning and transformations are performed using **PySpark and SQL**.
-
-Key operations:
-
-* Removing duplicates
-* Handling missing values
-* Standardizing timestamps
-* Data validation
-
-The cleaned datasets are stored as **Silver Delta tables**.
-
----
-
-### Step 4 – Gold Layer Modeling
-
-The Gold layer builds the **analytics data model**.
-
-Operations performed:
-
-* Joining Silver tables
-* Creating fact table
-* Creating dimension tables
-* Aggregating business metrics
-
-This layer supports analytical queries used for business insights.
-
----
-
-## Example Business Insights
-
-The Gold layer enables generation of multiple business insights.
-
-Examples include:
-
-### Revenue Trend Analysis
-
-Track daily and monthly revenue trends.
-
-### Top Selling Products
-
-Identify products generating the highest sales.
-
-### Customer Lifetime Value
-
-Determine high-value customers.
-
-### Seller Performance
-
-Evaluate top performing sellers.
-
-### Delivery Efficiency
-
-Measure average delivery time and logistics performance.
-
----
-
-## Example Analytical SQL Query
-
-Example: Monthly Revenue
-
-```sql
-SELECT 
-DATE_TRUNC('month', order_purchase_timestamp) AS month,
-SUM(payment_value) AS monthly_revenue
-FROM gold.fact_sales
-GROUP BY month
-ORDER BY month;
-```
-
----
-
-## Dashboards Built from Gold Layer
-
-Three main dashboards can be built using this dataset.
-
-### Sales Performance Dashboard
-
-Metrics:
-
-* Total revenue
-* Total orders
-* Top products
-* Revenue by category
-
-### Customer Analytics Dashboard
-
-Metrics:
-
-* Customer lifetime value
-* Repeat customers
-* Regional sales
-
-### Strategic Insights Dashboard
-
-Metrics:
-
-* Seller performance
-* Product demand trends
-* Delivery performance
 
 ---
 
 ## Technology Stack
 
-| Technology           | Purpose                               |
-| -------------------- | ------------------------------------- |
-| AWS S3               | Data lake storage                     |
-| Databricks           | Data processing platform              |
-| PySpark              | Distributed data transformation       |
-| Delta Lake           | Storage format with ACID transactions |
-| Unity Catalog        | Metadata management                   |
-| Databricks SQL       | Analytical queries                    |
-| Databricks Workflows | Pipeline scheduling                   |
+| Technology | Purpose |
+|------------|--------|
+| AWS S3 | Data Lake Storage |
+| Databricks | Data Engineering Platform |
+| PySpark | Distributed Data Processing |
+| Delta Lake | Optimized Storage Format |
+| Unity Catalog | Metadata Management |
+| SQL | Analytical Queries |
+| Databricks Workflows | Pipeline Scheduling |
+| Git | Version Control |
+| dbt | Advanced Data Transformations |
 
 ---
 
-## Pipeline Scheduling
+## Dataset
 
-The pipeline can be automated using **Databricks Workflows**.
+Dataset Used:
 
-Execution schedule:
+Brazilian E-Commerce Public Dataset (Olist) from Kaggle.
 
-Daily batch processing
+The dataset contains transactional information related to:
 
-Pipeline stages executed:
+- Customers
+- Orders
+- Order Items
+- Payments
+- Products
+- Sellers
+- Product Categories
 
-```
-Bronze → Silver → Gold
-```
+Example Raw Storage Path:
+s3://ecommerce-data-lake/raw/ecommerce_sales/YYYY/MM/DD/
 
----
-
-## Monitoring and Logging
-
-Monitoring mechanisms ensure pipeline reliability.
-
-Logs include:
-
-* pipeline execution logs
-* error tracking
-* data quality alerts
 
 ---
 
-## Key Data Engineering Concepts Demonstrated
+## Data Pipeline Layers
 
-This project demonstrates several modern data engineering concepts:
+### Bronze Layer – Raw Data Ingestion
 
-* Medallion Architecture
-* Delta Lake Data Management
-* Dimensional Data Modeling
-* Star Schema Design
-* Distributed Data Processing
-* Data Lakehouse Architecture
-* Analytical SQL Queries
+Purpose:
+Store raw data in Delta format.
+
+Tasks performed:
+
+- Read CSV datasets from AWS S3
+- Convert raw data into Delta tables
+- Preserve original data with minimal transformation
+- Add ingestion metadata
+
+Example Bronze Tables:
+| Bronze Tables |
+|---------------|
+| bronze_customers |
+| bronze_orders |
+| bronze_order_items |
+| bronze_payments |
+| bronze_products |
+| bronze_sellers |
+
+
+
+---
+
+### Silver Layer – Data Cleaning and Transformation
+
+Purpose:
+Create clean and standardized datasets.
+
+Transformations include:
+
+- Remove duplicate records
+- Handle missing values
+- Convert timestamp formats
+- Standardize column formats
+- Perform data validation checks
+- Join related datasets
+
+Example Silver Tables:
+| Silver Tables |
+|---------------|
+| customers_clean |
+| orders_clean |
+| order_items_clean |
+| payments_clean |
+| products_clean |
+| sellers_clean |
+
+
+
+---
+
+### Gold Layer – Analytics Data Model
+
+Purpose:
+Create an analytics-ready star schema for business intelligence.
+
+| Table Type | Table Name |
+|-----------|------------|
+| Fact Table | fact_sales |
+| Dimension | dim_customers |
+| Dimension | dim_products |
+| Dimension | dim_sellers |
+| Dimension | dim_orders |
+| Dimension | dim_date |
+
+
+
+The Gold layer supports analytical queries such as revenue analysis, customer behavior analysis, and seller performance evaluation.
+
+---
+
+## Business Insights Generated
+
+The pipeline enables approximately 15 business insights categorized into three analytics levels.
+
+### Descriptive Analytics
+
+- Total revenue trend
+- Total orders per day
+- Top selling products
+- Sales by product category
+- Customer distribution by region
+
+### Diagnostic Analytics
+
+- Customer purchase frequency
+- Average order value
+- Seller performance analysis
+- Delivery performance
+- Shipping cost impact
+
+### Strategic / Predictive Analytics
+
+- Customer lifetime value (CLV)
+- Customer segmentation
+- Product affinity analysis
+- Demand forecasting
+- Customer churn detection
+
+---
+
+## Analytics Dashboards
+
+The Gold layer supports multiple business dashboards.
+
+### Sales Performance Dashboard
+
+Key metrics:
+
+- Total revenue
+- Total orders
+- Average order value
+- Top selling products
+- Revenue by category
+
+### Customer Analytics Dashboard
+
+Key metrics:
+
+- Customer lifetime value
+- Repeat customers
+- Purchase frequency
+- Customer segmentation
+
+### Strategic Insights Dashboard
+
+Key metrics:
+
+- Demand forecasting
+- Customer churn analysis
+- Product affinity insights
+
+---
+
+## Pipeline Automation
+
+The pipeline execution is automated using Databricks Workflows.
+
+Schedule:
+Daily Batch Job
+Time: 3 AM UTC
+
+
+Workflow tasks include:
+
+1. Bronze ingestion
+2. Silver transformation
+3. Gold modeling
+4. Data quality checks
+5. Analytics table refresh
+
+---
+
+## Data Quality and Monitoring
+
+The pipeline includes several data quality validation checks.
+
+- Record count validation
+- Schema validation
+- Null value checks
+- Duplicate detection
+- Data anomaly detection
+
+Errors and pipeline issues are logged in:
+ecommerce_catalog.logs.etl_errors
+
+
+
+Alerts are triggered for job failures or abnormal data patterns.
+
+---
+
+## My Role in the Project
+
+Role:
+Project Lead and Data Quality / Pipeline Orchestration Engineer
+
+Responsibilities:
+
+- Led the development of the end-to-end e-commerce analytics pipeline
+- Implemented data quality monitoring and validation checks
+- Managed Bronze, Silver, and Gold layer validation
+- Configured pipeline scheduling using Databricks Workflows
+- Performed advanced transformations using dbt and PySpark
+- Validated business insights generated from the Gold analytics layer
+
+---
+
+## Key Project Outcomes
+
+- Built a scalable lakehouse data pipeline
+- Implemented Medallion Architecture
+- Designed star schema data warehouse model
+- Enabled business-ready analytics datasets
+- Automated daily ETL pipeline execution
 
 ---
 
 ## Future Improvements
 
-Possible enhancements include:
-
-* Streaming ingestion using Spark Structured Streaming
-* Real-time dashboards
-* Machine learning models for demand forecasting
-* Data quality monitoring using Delta Live Tables
-
+- Integrate real-time streaming data ingestion
+- Implement machine learning-based demand forecasting
+- Deploy dashboards using Power BI or Streamlit
+- Implement CI/CD for data pipelines
 ---
+## Conclusion
 
-## Author
+This project demonstrates how a modern data engineering pipeline can transform raw e-commerce data into reliable analytics datasets and business insights using the Lakehouse architecture.
 
-Praveen Kumar
-
-Data Engineering Trainee
-
-Skills:
-
-Python | SQL | PySpark | Databricks | Hadoop | Spark | AWS | Data Engineering
+The system integrates AWS S3, Databricks, PySpark, Delta Lake, and SQL analytics to deliver scalable and efficient data processing for business intelligence.

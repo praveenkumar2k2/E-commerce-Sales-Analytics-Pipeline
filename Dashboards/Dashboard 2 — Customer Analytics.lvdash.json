@@ -1,0 +1,759 @@
+{
+  "datasets": [
+    {
+      "name": "5c8d9a27",
+      "displayName": "fact_sales",
+      "queryLines": [
+        "SELECT * FROM ecommerce_catalog.gold.fact_sales"
+      ]
+    },
+    {
+      "name": "96516e00",
+      "displayName": "Top Customers by Purchase Count Summary",
+      "queryLines": [
+        "--Customer Purchase Frequency\r\n",
+        "SELECT \r\n",
+        "customer_id,\r\n",
+        "COUNT(order_id) AS total_orders\r\n",
+        "FROM ecommerce_catalog.gold.fact_sales\r\n",
+        "GROUP BY customer_id\r\n",
+        "ORDER BY total_orders DESC\r\n",
+        "LIMIT 20;"
+      ],
+      "catalog": "ecommerce_catalog",
+      "schema": "gold"
+    },
+    {
+      "name": "ec1c9fea",
+      "displayName": "Repeat vs One-Time Customers",
+      "queryLines": [
+        "--Repeat vs One-Time Customers\r\n",
+        "\r\n",
+        "SELECT \r\n",
+        "CASE \r\n",
+        "WHEN order_count = 1 THEN 'One Time'\r\n",
+        "ELSE 'Repeat'\r\n",
+        "END AS customer_type,\r\n",
+        "COUNT(*) AS customers\r\n",
+        "FROM (\r\n",
+        "SELECT customer_id, COUNT(order_id) AS order_count\r\n",
+        "FROM ecommerce_catalog.gold.fact_sales\r\n",
+        "GROUP BY customer_id\r\n",
+        ") t\r\n",
+        "GROUP BY customer_type;"
+      ],
+      "catalog": "ecommerce_catalog",
+      "schema": "gold"
+    },
+    {
+      "name": "71e84ab4",
+      "displayName": "Average Order Value by Customer",
+      "queryLines": [
+        "--Average Order Value by Customer\r\n",
+        "\r\n",
+        "SELECT \r\n",
+        "customer_id,\r\n",
+        "AVG(payment_value) AS avg_order_value\r\n",
+        "FROM ecommerce_catalog.gold.fact_sales\r\n",
+        "GROUP BY customer_id\r\n",
+        "ORDER BY avg_order_value DESC\r\n",
+        "LIMIT 20;"
+      ],
+      "catalog": "ecommerce_catalog",
+      "schema": "gold"
+    },
+    {
+      "name": "8873e8f1",
+      "displayName": "Customer Distribution by State",
+      "queryLines": [
+        "---Customer Distribution by State\r\n",
+        " \r\n",
+        "SELECT\r\n",
+        "customer_state,\r\n",
+        "COUNT(DISTINCT customer_id) AS total_customers\r\n",
+        "FROM ecommerce_catalog.gold.dim_customers\r\n",
+        "GROUP BY customer_state\r\n",
+        "ORDER BY total_customers DESC;"
+      ],
+      "catalog": "ecommerce_catalog",
+      "schema": "gold"
+    },
+    {
+      "name": "b936a6c8",
+      "displayName": "Top Customers by Revenue",
+      "queryLines": [
+        "---Top Customers by Revenue\r\n",
+        "\r\n",
+        "SELECT\r\n",
+        "customer_id,\r\n",
+        "SUM(payment_value) AS total_spent\r\n",
+        "FROM ecommerce_catalog.gold.fact_sales\r\n",
+        "GROUP BY customer_id\r\n",
+        "ORDER BY total_spent DESC\r\n",
+        "LIMIT 10;\r\n"
+      ],
+      "catalog": "ecommerce_catalog",
+      "schema": "gold"
+    }
+  ],
+  "pages": [
+    {
+      "name": "2d44eefe",
+      "displayName": "Visualization",
+      "layout": [
+        {
+          "widget": {
+            "name": "customer-purchase-frequency",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "96516e00",
+                  "fields": [
+                    {
+                      "name": "customer_id",
+                      "expression": "`customer_id`"
+                    },
+                    {
+                      "name": "total_orders",
+                      "expression": "`total_orders`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Customer Purchase Frequency",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_orders",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "customer_id",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "customer_id",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "average-order-value1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ec1c9fea",
+                  "fields": [
+                    {
+                      "name": "customers",
+                      "expression": "`customers`"
+                    },
+                    {
+                      "name": "customer_type",
+                      "expression": "`customer_type`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Repeat vs One-Time Customers"
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "customers",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "hideTitle": true
+                  },
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "customer_type",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "Repeat",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 4
+                        }
+                      },
+                      {
+                        "value": "One Time",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 3
+                        }
+                      }
+                    ]
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 5,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "average-order-value-by-customer",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "71e84ab4",
+                  "fields": [
+                    {
+                      "name": "sum(avg_order_value)",
+                      "expression": "SUM(`avg_order_value`)"
+                    },
+                    {
+                      "name": "customer_id",
+                      "expression": "`customer_id`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Average Order Value by Customer"
+              },
+              "mark": {
+                "colors": [
+                  "#D18366",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(avg_order_value)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "customer_id",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 7,
+            "width": 7,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "top-customers-revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "8873e8f1",
+                  "fields": [
+                    {
+                      "name": "total_customers",
+                      "expression": "`total_customers`"
+                    },
+                    {
+                      "name": "customer_state",
+                      "expression": "`customer_state`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Top Customers by Revenue\n"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_customers",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "customer_state",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 12,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "top-customers-revenue-1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "b936a6c8",
+                  "fields": [
+                    {
+                      "name": "customer_id",
+                      "expression": "`customer_id`"
+                    },
+                    {
+                      "name": "total_spent",
+                      "expression": "`total_spent`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showDescription": false,
+                "title": "Top Customers by Revenue",
+                "showTitle": true
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_spent",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "customer_id",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "customer_id",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 21,
+            "width": 12,
+            "height": 7
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "db3f5d16",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "customer-purchase-frequency",
+            "queries": [
+              {
+                "name": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e35152017a683762611360fc797_total_orders",
+                "query": {
+                  "datasetName": "96516e00",
+                  "fields": [
+                    {
+                      "name": "total_orders",
+                      "expression": "`total_orders`"
+                    },
+                    {
+                      "name": "total_orders_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Customer Purchase Frequency"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "total_orders",
+                    "queryName": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e35152017a683762611360fc797_total_orders"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "repeat-vs-one-time-customers",
+            "queries": [
+              {
+                "name": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e359cb5148ea7b1941ccfd300e7_customers",
+                "query": {
+                  "datasetName": "ec1c9fea",
+                  "fields": [
+                    {
+                      "name": "customers",
+                      "expression": "`customers`"
+                    },
+                    {
+                      "name": "customers_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Repeat vs One-Time Customers"
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "customers",
+                    "queryName": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e359cb5148ea7b1941ccfd300e7_customers"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "average-order-value-by-customer",
+            "queries": [
+              {
+                "name": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e36ede81409b2d1f09cb7a59b3e_avg_order_value",
+                "query": {
+                  "datasetName": "71e84ab4",
+                  "fields": [
+                    {
+                      "name": "avg_order_value",
+                      "expression": "`avg_order_value`"
+                    },
+                    {
+                      "name": "avg_order_value_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": ""
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "avg_order_value",
+                    "queryName": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e36ede81409b2d1f09cb7a59b3e_avg_order_value"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "top-customers-revenue",
+            "queries": [
+              {
+                "name": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e37724d1b00995e0167ddd2344f_customer_state",
+                "query": {
+                  "datasetName": "8873e8f1",
+                  "fields": [
+                    {
+                      "name": "customer_state",
+                      "expression": "`customer_state`"
+                    },
+                    {
+                      "name": "customer_state_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Top Customers by Revenue"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "customer_state",
+                    "queryName": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e37724d1b00995e0167ddd2344f_customer_state"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "top-customers-revenue-1",
+            "queries": [
+              {
+                "name": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e3783241af3863185d5ea18cba5_customer_id",
+                "query": {
+                  "datasetName": "b936a6c8",
+                  "fields": [
+                    {
+                      "name": "customer_id",
+                      "expression": "`customer_id`"
+                    },
+                    {
+                      "name": "customer_id_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Top Customers by Revenue"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "customer_id",
+                    "queryName": "dashboards/01f11e34fb811eea99691f6346d43b8e/datasets/01f11e3783241af3863185d5ea18cba5_customer_id"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}

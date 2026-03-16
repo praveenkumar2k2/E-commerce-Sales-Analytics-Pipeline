@@ -1,0 +1,394 @@
+{
+  "datasets": [
+    {
+      "name": "930abc8d",
+      "displayName": "fact_sales",
+      "queryLines": [
+        "SELECT * FROM ecommerce_catalog.gold.fact_sales"
+      ]
+    },
+    {
+      "name": "f444f336",
+      "displayName": "Seller Performance",
+      "queryLines": [
+        "--bar chart\r\n",
+        "--Seller Performance\r\n",
+        "SELECT \r\n",
+        "seller_id,\r\n",
+        "SUM(product_price) AS revenue,\r\n",
+        "COUNT(DISTINCT order_id) AS orders\r\n",
+        "FROM ecommerce_catalog.gold.fact_sales\r\n",
+        "GROUP BY seller_id\r\n",
+        "ORDER BY revenue DESC\r\n",
+        "LIMIT 10;"
+      ],
+      "catalog": "ecommerce_catalog",
+      "schema": "gold"
+    },
+    {
+      "name": "594dab2b",
+      "displayName": "Average Delivery Time Analysis for Ecommerce Orders",
+      "queryLines": [
+        "--counter\r\n",
+        "--Delivery Performance\r\n",
+        "SELECT \r\n",
+        "AVG(DATEDIFF(order_delivered_customer_date, order_purchase_timestamp)) \r\n",
+        "AS avg_delivery_days\r\n",
+        "FROM ecommerce_catalog.gold.dim_orders;"
+      ],
+      "catalog": "ecommerce_catalog",
+      "schema": "gold"
+    },
+    {
+      "name": "fb1ab813",
+      "displayName": "Average Freight Cost Analysis Summary",
+      "queryLines": [
+        "--counter\r\n",
+        "--Shipping Cost Impact\r\n",
+        "SELECT \r\n",
+        "AVG(freight_value) AS avg_shipping_cost\r\n",
+        "FROM ecommerce_catalog.gold.fact_sales;"
+      ],
+      "catalog": "ecommerce_catalog",
+      "schema": "gold"
+    }
+  ],
+  "pages": [
+    {
+      "name": "54c29a02",
+      "displayName": "Visualization",
+      "layout": [
+        {
+          "widget": {
+            "name": "seller-performance",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "f444f336",
+                  "fields": [
+                    {
+                      "name": "revenue",
+                      "expression": "`revenue`"
+                    },
+                    {
+                      "name": "orders",
+                      "expression": "`orders`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "showTitle": true,
+                "title": "Seller Performance"
+              },
+              "mark": {
+                "colors": [
+                  "#48B7AD",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "orders",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 5,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "delivery-performance",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "594dab2b",
+                  "fields": [
+                    {
+                      "name": "sum(avg_delivery_days)",
+                      "expression": "SUM(`avg_delivery_days`)"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "IN_RANGE(`avg_delivery_days`, NULL, NULL)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Delivery Performance"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(avg_delivery_days)"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 0,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "shipping-cost-impact",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "fb1ab813",
+                  "fields": [
+                    {
+                      "name": "sum(avg_shipping_cost)",
+                      "expression": "SUM(`avg_shipping_cost`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Shipping Cost Impact"
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(avg_shipping_cost)"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 7
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "8a7e18d2",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "seller-performance",
+            "queries": [
+              {
+                "name": "dashboards/01f11e385fc61fac81a7bac5b07fcbf4/datasets/01f11e386ff31cc0be027c4109dbc194_orders",
+                "query": {
+                  "datasetName": "f444f336",
+                  "fields": [
+                    {
+                      "name": "orders",
+                      "expression": "`orders`"
+                    },
+                    {
+                      "name": "orders_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Seller Performance"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "orders",
+                    "queryName": "dashboards/01f11e385fc61fac81a7bac5b07fcbf4/datasets/01f11e386ff31cc0be027c4109dbc194_orders"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "delivery-performance",
+            "queries": [
+              {
+                "name": "dashboards/01f11e385fc61fac81a7bac5b07fcbf4/datasets/01f11e38efdf1974b2c6c209b8ed1273_avg_delivery_days",
+                "query": {
+                  "datasetName": "594dab2b",
+                  "fields": [
+                    {
+                      "name": "avg_delivery_days",
+                      "expression": "`avg_delivery_days`"
+                    },
+                    {
+                      "name": "avg_delivery_days_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Delivery Performance"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "avg_delivery_days",
+                    "queryName": "dashboards/01f11e385fc61fac81a7bac5b07fcbf4/datasets/01f11e38efdf1974b2c6c209b8ed1273_avg_delivery_days"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "shipping-cost-impact",
+            "queries": [
+              {
+                "name": "dashboards/01f11e385fc61fac81a7bac5b07fcbf4/datasets/01f11e38f1141ec496b60c41ba9798fe_avg_shipping_cost",
+                "query": {
+                  "datasetName": "fb1ab813",
+                  "fields": [
+                    {
+                      "name": "avg_shipping_cost",
+                      "expression": "`avg_shipping_cost`"
+                    },
+                    {
+                      "name": "avg_shipping_cost_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true,
+                "title": "Shipping Cost Impact"
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "avg_shipping_cost",
+                    "queryName": "dashboards/01f11e385fc61fac81a7bac5b07fcbf4/datasets/01f11e38f1141ec496b60c41ba9798fe_avg_shipping_cost"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
