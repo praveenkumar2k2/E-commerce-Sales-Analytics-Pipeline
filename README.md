@@ -1,5 +1,3 @@
-# E-commerce-Sales
-
 # E-commerce Sales Analytics Pipeline
 
 ## Project Overview
