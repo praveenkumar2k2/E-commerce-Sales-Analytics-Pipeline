@@ -1,0 +1,1147 @@
+{
+  "datasets": [
+    {
+      "name": "aa7a5bcb",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "SUM(price + freight_value) AS total_revenue\n",
+        "FROM main_workspace.gold.fact_sales\n",
+        "\n",
+        "\n",
+        "\n",
+        "\n"
+      ],
+      "catalog": "main_workspace",
+      "schema": "gold"
+    },
+    {
+      "name": "cb2a684c",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `default`;\n",
+        "\n",
+        "SELECT\n",
+        "COUNT(DISTINCT order_id) AS total_orders\n",
+        "FROM main_workspace.gold.fact_sales"
+      ]
+    },
+    {
+      "name": "60ac7e26",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "SUM(price + freight_value) /\n",
+        "COUNT(DISTINCT order_id) AS avg_order_value\n",
+        "FROM main_workspace.gold.fact_sales"
+      ]
+    },
+    {
+      "name": "70287266",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "p.product_category_name AS product_category,\n",
+        "SUM(fs.price + fs.freight_value) AS total_revenue\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.dim_products p\n",
+        "ON fs.product_id = p.product_id\n",
+        "GROUP BY p.product_category_name\n",
+        "ORDER BY total_revenue DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "d597cfee",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "INITCAP(REPLACE(t.product_category_name_english, '_', ' ')) AS product_category,\n",
+        "SUM(fs.price + fs.freight_value) AS total_revenue\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.dim_products p\n",
+        "ON fs.product_id = p.product_id\n",
+        "JOIN main_workspace.silver.product_category_translation t\n",
+        "ON p.product_category_name = t.product_category_name\n",
+        "GROUP BY t.product_category_name_english\n",
+        "ORDER BY total_revenue DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "9c7e6ee8",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "CONCAT(\n",
+        "INITCAP(REPLACE(p.product_category_name,'_',' ')),\n",
+        "' (',\n",
+        "INITCAP(REPLACE(t.product_category_name_english,'_',' ')),\n",
+        "')'\n",
+        ") AS product_category,\n",
+        "SUM(fs.price + fs.freight_value) AS total_revenue\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.dim_products p\n",
+        "ON fs.product_id = p.product_id\n",
+        "JOIN main_workspace.silver.product_category_translation t\n",
+        "ON p.product_category_name = t.product_category_name\n",
+        "GROUP BY p.product_category_name, t.product_category_name_english\n",
+        "ORDER BY total_revenue DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "89ac0dbf",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `default`;\n",
+        "\n",
+        "SELECT\n",
+        "DATE(o.order_purchase_timestamp) AS order_date,\n",
+        "SUM(fs.price + fs.freight_value) AS total_revenue\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.fact_orders o\n",
+        "ON fs.order_id = o.order_id\n",
+        "GROUP BY DATE(o.order_purchase_timestamp)\n",
+        "ORDER BY order_date"
+      ]
+    },
+    {
+      "name": "2b45f128",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "DATE(o.order_purchase_timestamp) AS order_date,\n",
+        "SUM(fs.price + fs.freight_value) AS total_revenue\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.fact_orders o\n",
+        "ON fs.order_id = o.order_id\n",
+        "GROUP BY DATE(o.order_purchase_timestamp)\n",
+        "ORDER BY order_date\n",
+        "\n"
+      ]
+    },
+    {
+      "name": "95fe860c",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `default`;\n",
+        "\n",
+        "SELECT\n",
+        "CASE\n",
+        "WHEN seller_revenue >= 200000 THEN 'High Performing Sellers'\n",
+        "WHEN seller_revenue BETWEEN 100000 AND 199999 THEN 'Medium Performing Sellers'\n",
+        "ELSE 'Low Performing Sellers'\n",
+        "END AS seller_segment,\n",
+        "COUNT(*) AS seller_count\n",
+        "FROM (\n",
+        "SELECT\n",
+        "seller_id,\n",
+        "SUM(price + freight_value) AS seller_revenue\n",
+        "FROM main_workspace.gold.fact_sales\n",
+        "GROUP BY seller_id\n",
+        ") s\n",
+        "GROUP BY seller_segment\n",
+        "ORDER BY seller_segment DESC"
+      ]
+    },
+    {
+      "name": "7ae36a4e",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "CASE\n",
+        "WHEN seller_revenue >= 200000 THEN 'High Performing Sellers'\n",
+        "WHEN seller_revenue BETWEEN 100000 AND 199999 THEN 'Medium Performing Sellers'\n",
+        "ELSE 'Low Performing Sellers'\n",
+        "END AS seller_segment,\n",
+        "COUNT(*) AS seller_count\n",
+        "FROM (\n",
+        "SELECT\n",
+        "seller_id,\n",
+        "SUM(price + freight_value) AS seller_revenue\n",
+        "FROM main_workspace.gold.fact_sales\n",
+        "GROUP BY seller_id\n",
+        ") s\n",
+        "GROUP BY seller_segment\n",
+        "ORDER BY seller_segment DESC"
+      ]
+    },
+    {
+      "name": "62197ccf",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `default`;\n",
+        "\n",
+        "SELECT\n",
+        "'Product Revenue' AS revenue_type,\n",
+        "SUM(price) AS amount\n",
+        "FROM main_workspace.gold.fact_sales\n",
+        "\n",
+        "UNION ALL\n",
+        "\n",
+        "SELECT\n",
+        "'Shipping Revenue' AS revenue_type,\n",
+        "SUM(freight_value) AS amount\n",
+        "FROM main_workspace.gold.fact_sales"
+      ]
+    },
+    {
+      "name": "23ebabb0",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "'Product Revenue' AS revenue_type,\n",
+        "SUM(price) AS amount\n",
+        "FROM main_workspace.gold.fact_sales\n",
+        "\n",
+        "UNION ALL\n",
+        "\n",
+        "SELECT\n",
+        "'Shipping Revenue' AS revenue_type,\n",
+        "SUM(freight_value) AS amount\n",
+        "FROM main_workspace.gold.fact_sales"
+      ]
+    },
+    {
+      "name": "21517244",
+      "displayName": "Untitled dataset",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `default`;\n",
+        "\n",
+        "SELECT\n",
+        "CONCAT(\n",
+        "    INITCAP(REPLACE(p.product_category_name,'_',' ')),\n",
+        "    '  ( ',\n",
+        "    INITCAP(REPLACE(t.product_category_name_english,'_',' ')),\n",
+        "    ' )'\n",
+        ") AS product_category,\n",
+        "ROUND(AVG(fs.price),2) AS avg_product_price\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.dim_products p\n",
+        "ON fs.product_id = p.product_id\n",
+        "JOIN main_workspace.silver.product_category_translation t\n",
+        "ON p.product_category_name = t.product_category_name\n",
+        "GROUP BY p.product_category_name, t.product_category_name_english\n",
+        "ORDER BY avg_product_price DESC\n",
+        "LIMIT 10"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "5b49257d",
+      "displayName": "Sales_Dashboard",
+      "layout": [
+        {
+          "widget": {
+            "name": "b78e1da3",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "aa7a5bcb",
+                  "fields": [
+                    {
+                      "name": "total_revenue",
+                      "expression": "`total_revenue`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "description": "",
+                "showDescription": false,
+                "title": "Total Revenue",
+                "showTitle": true,
+                "headerAlignment": "center"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#BF7080"
+                }
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 3
+                    },
+                    "significantFigures": {
+                      "type": "exact",
+                      "figures": 6
+                    },
+                    "negativeSign": "standard"
+                  },
+                  "style": {
+                    "bold": true,
+                    "color": {
+                      "themeColorType": "visualizationColors",
+                      "position": 8
+                    }
+                  }
+                }
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "dark": "#483A6A"
+              },
+              "widgetBorderColor": {
+                "dark": "#BB85D6"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "16899dc6",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "cb2a684c",
+                  "fields": [
+                    {
+                      "name": "total_orders",
+                      "expression": "`total_orders`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Total Orders",
+                "showTitle": true,
+                "description": "",
+                "showDescription": false,
+                "headerAlignment": "center"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#BF7080"
+                }
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_orders",
+                  "rowNumber": 1,
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "all"
+                    },
+                    "significantFigures": {
+                      "type": "all"
+                    }
+                  },
+                  "style": {
+                    "color": {
+                      "themeColorType": "visualizationColors",
+                      "position": 8
+                    },
+                    "bold": true
+                  }
+                }
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "dark": "#483A6A"
+              },
+              "widgetBorderColor": {
+                "dark": "#BB85D6"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "daf0c571",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "60ac7e26",
+                  "fields": [
+                    {
+                      "name": "avg_order_value",
+                      "expression": "`avg_order_value`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Average Order Value",
+                "showTitle": true,
+                "description": "",
+                "showDescription": false,
+                "headerAlignment": "center"
+              },
+              "style": {
+                "fontColor": {
+                  "dark": "#BF7080"
+                }
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg_order_value",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 0
+                    }
+                  },
+                  "rowNumber": 1,
+                  "style": {
+                    "color": {
+                      "themeColorType": "visualizationColors",
+                      "position": 8
+                    },
+                    "bold": true
+                  }
+                }
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "dark": "#483A6A"
+              },
+              "widgetBorderColor": {
+                "dark": "#BB85D6"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "e2aefe06",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "9c7e6ee8",
+                  "fields": [
+                    {
+                      "name": "total_revenue",
+                      "expression": "`total_revenue`"
+                    },
+                    {
+                      "name": "product_category",
+                      "expression": "`product_category`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Top 10 Product Categories by Revenue",
+                "showTitle": true,
+                "headerAlignment": "left"
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "total_revenue",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    },
+                    "significantFigures": {
+                      "type": "all"
+                    }
+                  },
+                  "displayName": "Total Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "product_category",
+                  "axis": {
+                    "hideLabels": false,
+                    "labelAngle": 0
+                  },
+                  "displayName": "Product Category",
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "x-reversed"
+                    }
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "dark": "#483A6A"
+              },
+              "widgetBorderColor": {
+                "dark": "#FFD166"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 12,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "b7335860",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "2b45f128",
+                  "fields": [
+                    {
+                      "name": "order_date",
+                      "expression": "`order_date`"
+                    },
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Revenue Trend Over Time",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ]
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "order_date",
+                  "format": {
+                    "type": "date",
+                    "date": "locale-short-month",
+                    "leadingZeros": true
+                  },
+                  "displayName": "Order Date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(total_revenue)",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    },
+                    "significantFigures": {
+                      "type": "all"
+                    }
+                  },
+                  "displayName": "Total Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "dark": "#483A6A"
+              },
+              "widgetBorderColor": {
+                "dark": "#FFD166"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 12,
+            "height": 8
+          }
+        },
+        {
+          "widget": {
+            "name": "7285a0c4",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "7ae36a4e",
+                  "fields": [
+                    {
+                      "name": "sum(seller_count)",
+                      "expression": "SUM(`seller_count`)"
+                    },
+                    {
+                      "name": "seller_segment",
+                      "expression": "`seller_segment`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "mark": {
+                "layout": "stack"
+              },
+              "frame": {
+                "title": "Seller Revenue Distribution (High / Medium / Low)",
+                "showTitle": true
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(seller_count)",
+                  "scale": {
+                    "type": "quantitative",
+                    "reverse": true
+                  },
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    },
+                    "significantFigures": {
+                      "type": "exact",
+                      "figures": 3
+                    }
+                  },
+                  "axis": {
+                    "title": "Seller Count"
+                  },
+                  "displayName": "seller_count"
+                },
+                "color": {
+                  "fieldName": "seller_segment",
+                  "legend": {
+                    "position": "bottom",
+                    "title": "Seller Segment"
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "angle"
+                    },
+                    "mappings": [
+                      {
+                        "value": "Low Performing Sellers",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 10
+                        }
+                      },
+                      {
+                        "value": "Medium Performing Sellers",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 5
+                        }
+                      },
+                      {
+                        "value": "High Performing Sellers",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 3
+                        }
+                      }
+                    ]
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "dark": "#483A6A"
+              },
+              "widgetBorderColor": {
+                "dark": "#FFD166"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 17,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "4bdbd104",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "23ebabb0",
+                  "fields": [
+                    {
+                      "name": "sum(amount)",
+                      "expression": "SUM(`amount`)"
+                    },
+                    {
+                      "name": "revenue_type",
+                      "expression": "`revenue_type`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "mark": {
+                "layout": "stack"
+              },
+              "frame": {
+                "title": "Revenue vs Shipping Cost Contribution",
+                "showTitle": true
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(amount)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Amount"
+                  },
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    },
+                    "significantFigures": {
+                      "type": "exact",
+                      "figures": 3
+                    }
+                  },
+                  "displayName": "amount"
+                },
+                "color": {
+                  "fieldName": "revenue_type",
+                  "legend": {
+                    "title": "Revenue Type"
+                  },
+                  "scale": {
+                    "type": "categorical",
+                    "sort": {
+                      "by": "angle-reversed"
+                    },
+                    "mappings": [
+                      {
+                        "value": "Product Revenue",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 10
+                        }
+                      },
+                      {
+                        "value": "Shipping Revenue",
+                        "color": {
+                          "themeColorType": "visualizationColors",
+                          "position": 6
+                        }
+                      }
+                    ]
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "dark": "#483A6A"
+              },
+              "widgetBorderColor": {
+                "dark": "#FFD166"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 17,
+            "width": 6,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "f2744d2d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "21517244",
+                  "fields": [
+                    {
+                      "name": "sum(avg_product_price)",
+                      "expression": "SUM(`avg_product_price`)"
+                    },
+                    {
+                      "name": "product_category",
+                      "expression": "`product_category`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Average Product Price by Category",
+                "showTitle": true
+              },
+              "mark": {
+                "colors": [
+                  "#AF5653",
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 2
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 3
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 4
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 5
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 6
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 7
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 8
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 9
+                  },
+                  {
+                    "themeColorType": "visualizationColors",
+                    "position": 10
+                  }
+                ],
+                "layout": "group"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(avg_product_price)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "all"
+                    },
+                    "significantFigures": {
+                      "type": "all"
+                    }
+                  },
+                  "displayName": "Average Product Price",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "product_category",
+                  "displayName": "Product Category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            },
+            "specExtensions": {
+              "widgetBackgroundColor": {
+                "dark": "#483A6A"
+              },
+              "widgetBorderColor": {
+                "dark": "#FFD166"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 24,
+            "width": 12,
+            "height": 8
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "fe2b64b0",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "23452464",
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {},
+              "frame": {
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "20b67055",
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {},
+              "frame": {
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "c5a9e131",
+      "displayName": "Untitled page",
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#FAFAFB",
+        "dark": "#1F272D"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#11171C"
+      },
+      "fontColor": {
+        "light": "#11171C",
+        "dark": "#E8ECF0"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
+      "widgetHeaderAlignment": "LEFT"
+    },
+    "applyModeEnabled": false
+  }
+}

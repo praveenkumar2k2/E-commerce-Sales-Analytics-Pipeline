@@ -1,0 +1,660 @@
+{
+  "datasets": [
+    {
+      "name": "82d47c8a",
+      "displayName": "Monthly Product Demand Trend",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "DATE_TRUNC('month', o.order_purchase_timestamp) AS order_month,\n",
+        "\n",
+        "CONCAT(\n",
+        "INITCAP(REPLACE(p.product_category_name,'_',' ')),\n",
+        "'  ( ',\n",
+        "INITCAP(REPLACE(t.product_category_name_english,'_',' ')),\n",
+        "' )'\n",
+        ") AS product_category,\n",
+        "\n",
+        "QUARTER(o.order_purchase_timestamp) AS order_quarter,\n",
+        "\n",
+        "COUNT(fs.product_id) AS items_sold\n",
+        "\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.fact_orders o\n",
+        "ON fs.order_id = o.order_id\n",
+        "JOIN main_workspace.gold.dim_products p\n",
+        "ON fs.product_id = p.product_id\n",
+        "JOIN main_workspace.silver.product_category_translation t\n",
+        "ON p.product_category_name = t.product_category_name\n",
+        "\n",
+        "GROUP BY\n",
+        "DATE_TRUNC('month', o.order_purchase_timestamp),\n",
+        "QUARTER(o.order_purchase_timestamp),\n",
+        "p.product_category_name,\n",
+        "t.product_category_name_english\n",
+        "\n",
+        "ORDER BY order_month"
+      ]
+    },
+    {
+      "name": "1e563c58",
+      "displayName": "Daily Sales Volume Trend",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "DATE(o.order_purchase_timestamp) AS order_date,\n",
+        "CONCAT(\n",
+        "INITCAP(REPLACE(p.product_category_name,'_',' ')),\n",
+        "'  ( ',\n",
+        "INITCAP(REPLACE(t.product_category_name_english,'_',' ')),\n",
+        "' )'\n",
+        ") AS product_category,\n",
+        "COUNT(fs.product_id) AS items_sold\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.fact_orders o\n",
+        "ON fs.order_id = o.order_id\n",
+        "JOIN main_workspace.gold.dim_products p\n",
+        "ON fs.product_id = p.product_id\n",
+        "JOIN main_workspace.silver.product_category_translation t\n",
+        "ON p.product_category_name = t.product_category_name\n",
+        "GROUP BY\n",
+        "DATE(o.order_purchase_timestamp),\n",
+        "p.product_category_name,\n",
+        "t.product_category_name_english\n",
+        "ORDER BY order_date"
+      ]
+    },
+    {
+      "name": "1d8629e0",
+      "displayName": "Shipping Cost Impact",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "ROUND(\n",
+        "SUM(freight_value) / SUM(price) * 100,2\n",
+        ") AS shipping_cost_percentage\n",
+        "FROM main_workspace.gold.fact_sales"
+      ]
+    },
+    {
+      "name": "50f76215",
+      "displayName": "Top Product Categories by Average Price",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "CONCAT(\n",
+        "INITCAP(REPLACE(p.product_category_name,'_',' ')),\n",
+        "'  ( ',\n",
+        "INITCAP(REPLACE(t.product_category_name_english,'_',' ')),\n",
+        "' )'\n",
+        ") AS product_category,\n",
+        "ROUND(AVG(fs.price),2) AS avg_price\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.dim_products p\n",
+        "ON fs.product_id = p.product_id\n",
+        "JOIN main_workspace.silver.product_category_translation t\n",
+        "ON p.product_category_name = t.product_category_name\n",
+        "GROUP BY p.product_category_name, t.product_category_name_english\n",
+        "ORDER BY avg_price DESC\n",
+        "LIMIT 10"
+      ]
+    },
+    {
+      "name": "a8b1da59",
+      "displayName": "Top 10 Customers Revenue Share",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "WITH customer_revenue AS (\n",
+        "SELECT\n",
+        "o.customer_id,\n",
+        "SUM(fs.price + fs.freight_value) AS revenue\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.fact_orders o\n",
+        "ON fs.order_id = o.order_id\n",
+        "GROUP BY o.customer_id\n",
+        "),\n",
+        "\n",
+        "top_customers AS (\n",
+        "SELECT\n",
+        "SUM(revenue) AS top_revenue\n",
+        "FROM (\n",
+        "SELECT revenue\n",
+        "FROM customer_revenue\n",
+        "ORDER BY revenue DESC\n",
+        "LIMIT 10\n",
+        ")\n",
+        "),\n",
+        "\n",
+        "total_revenue AS (\n",
+        "SELECT SUM(revenue) AS total_rev\n",
+        "FROM customer_revenue\n",
+        ")\n",
+        "\n",
+        "SELECT\n",
+        "ROUND((top_revenue / total_rev) * 100,2) AS top_customer_revenue_share\n",
+        "FROM top_customers, total_revenue"
+      ]
+    },
+    {
+      "name": "3bfcce1c",
+      "displayName": "Revenue Concentration by Category",
+      "queryLines": [
+        "USE CATALOG `main_workspace`;\n",
+        "USE SCHEMA `gold`;\n",
+        "\n",
+        "SELECT\n",
+        "CONCAT(\n",
+        "INITCAP(REPLACE(p.product_category_name,'_',' ')),\n",
+        "'  ( ',\n",
+        "INITCAP(REPLACE(t.product_category_name_english,'_',' ')),\n",
+        "' )'\n",
+        ") AS product_category,\n",
+        "SUM(fs.price + fs.freight_value) AS total_revenue\n",
+        "FROM main_workspace.gold.fact_sales fs\n",
+        "JOIN main_workspace.gold.dim_products p\n",
+        "ON fs.product_id = p.product_id\n",
+        "JOIN main_workspace.silver.product_category_translation t\n",
+        "ON p.product_category_name = t.product_category_name\n",
+        "GROUP BY p.product_category_name, t.product_category_name_english\n",
+        "ORDER BY total_revenue DESC\n",
+        "LIMIT 10"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "d9dd6320",
+      "displayName": "Strategic Insights Dashboard",
+      "layout": [
+        {
+          "widget": {
+            "name": "2ac9cc93",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "82d47c8a",
+                  "fields": [
+                    {
+                      "name": "order_month",
+                      "expression": "`order_month`"
+                    },
+                    {
+                      "name": "sum(items_sold)",
+                      "expression": "SUM(`items_sold`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Monthly Product Demand Trend",
+                "showTitle": true
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "order_month",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "sum(items_sold)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "cc572fa9",
+            "queries": [
+              {
+                "name": "dashboards/01f120ef656e1f67b091f9065d37d1ed/datasets/6e94a3fd9d87423b8a2322689eb2ba12_order_quarter",
+                "query": {
+                  "datasetName": "82d47c8a",
+                  "fields": [
+                    {
+                      "name": "order_quarter",
+                      "expression": "`order_quarter`"
+                    },
+                    {
+                      "name": "order_quarter_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true
+              },
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "order_quarter",
+                    "queryName": "dashboards/01f120ef656e1f67b091f9065d37d1ed/datasets/6e94a3fd9d87423b8a2322689eb2ba12_order_quarter"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "8612a784",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1e563c58",
+                  "fields": [
+                    {
+                      "name": "order_date",
+                      "expression": "`order_date`"
+                    },
+                    {
+                      "name": "count(items_sold)",
+                      "expression": "COUNT(`items_sold`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Daily Sales Volume Trend",
+                "showTitle": true
+              },
+              "widgetType": "area",
+              "encodings": {
+                "x": {
+                  "fieldName": "order_date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "count(items_sold)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 7,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "5f9553f8",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "1d8629e0",
+                  "fields": [
+                    {
+                      "name": "shipping_cost_percentage",
+                      "expression": "`shipping_cost_percentage`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Shipping Cost Impact",
+                "showTitle": true,
+                "description": "",
+                "showDescription": false
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "shipping_cost_percentage",
+                  "style": {
+                    "bold": true
+                  },
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    },
+                    "significantFigures": {
+                      "type": "exact",
+                      "figures": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 13,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "72785b0a",
+            "queries": [
+              {
+                "name": "dashboards/01f120ef656e1f67b091f9065d37d1ed/datasets/6e94a3fd9d87423b8a2322689eb2ba12_product_category",
+                "query": {
+                  "datasetName": "82d47c8a",
+                  "fields": [
+                    {
+                      "name": "product_category",
+                      "expression": "`product_category`"
+                    },
+                    {
+                      "name": "product_category_associativity",
+                      "expression": "COUNT_IF(`associative_filter_predicate_group`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "showTitle": true
+              },
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "product_category",
+                    "queryName": "dashboards/01f120ef656e1f67b091f9065d37d1ed/datasets/6e94a3fd9d87423b8a2322689eb2ba12_product_category"
+                  }
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "d3b93a43",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "50f76215",
+                  "fields": [
+                    {
+                      "name": "sum(avg_price)",
+                      "expression": "SUM(`avg_price`)"
+                    },
+                    {
+                      "name": "product_category",
+                      "expression": "`product_category`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "mark": {
+                "layout": "stack"
+              },
+              "frame": {
+                "title": "Revenue Distribution by Product Category",
+                "showTitle": true
+              },
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(avg_price)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "avg_price"
+                },
+                "color": {
+                  "fieldName": "product_category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 9,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "f3afd9d3",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "a8b1da59",
+                  "fields": [
+                    {
+                      "name": "top_customer_revenue_share",
+                      "expression": "`top_customer_revenue_share`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "frame": {
+                "title": "Top 10 Customers Revenue Share",
+                "showTitle": true,
+                "description": "",
+                "showDescription": false
+              },
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "top_customer_revenue_share",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    }
+                  },
+                  "rowNumber": 1,
+                  "style": {
+                    "bold": true
+                  }
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 16,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "48c321e4",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "3bfcce1c",
+                  "fields": [
+                    {
+                      "name": "sum(total_revenue)",
+                      "expression": "SUM(`total_revenue`)"
+                    },
+                    {
+                      "name": "product_category",
+                      "expression": "`product_category`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "frame": {
+                "title": "Revenue Concentration by Category",
+                "showTitle": true
+              },
+              "mark": {
+                "layout": "group"
+              },
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "sum(total_revenue)",
+                  "displayName": "total_revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "product_category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "label": {
+                  "show": true
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 19,
+            "width": 12,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    },
+    {
+      "name": "1bb6e392",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "3f67202c",
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {},
+              "frame": {
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "ab9e9c1e",
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {},
+              "frame": {
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
