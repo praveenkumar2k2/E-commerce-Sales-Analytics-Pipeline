@@ -14,12 +14,7 @@ This system enables organizations to analyze sales performance, customer behavio
 
 ## Project Objectives
 
-- Build a scalable batch ETL pipeline for e-commerce data
-- Process raw transactional datasets stored in AWS S3
-- Apply data cleaning, transformation, and validation
-- Design an analytics-ready star schema model
-- Generate business insights and dashboards
-- Automate pipeline execution using Databricks Workflows
+The objective of this project is to build a scalable batch ETL pipeline for an e-commerce sales analytics system that can efficiently handle large volumes of data. The pipeline processes raw transactional data stored in Amazon S3 and uses PySpark on Databricks to perform data cleaning, transformation, and validation to ensure high data quality. The project also focuses on designing an analytics-ready star schema model that makes it easier to analyze data and run queries. Using SQL, the pipeline generates useful business insights and dashboards such as sales trends, customer behavior, and product performance. Finally, the entire pipeline is automated using Databricks Workflows, enabling smooth, scheduled, and reliable execution without manual intervention.
 
 ---
 
@@ -27,8 +22,7 @@ This system enables organizations to analyze sales performance, customer behavio
 
 The pipeline follows a modern Lakehouse Data Engineering Architecture.
 
-<img width="1536" height="1024" alt="ChatGPT Image Mar 13, 2026, 12_04_29 AM" src="https://github.com/user-attachments/assets/3dbaa5fa-dbd0-485a-8458-8311e57b9587" />
-
+![e-commerce system architecture](https://github.com/user-attachments/assets/5c83014e-8ffb-4c2a-82ed-f702183537dc)
 
 ---
 
