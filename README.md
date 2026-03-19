@@ -1,5 +1,3 @@
-# E-commerce Sales Analytics Pipeline
-
 ## Project Overview
 
 The E-commerce Sales Analytics Pipeline is an end-to-end Data Engineering project designed to process raw transactional data from an e-commerce marketplace and transform it into analytics-ready datasets for reporting and business insights.
@@ -12,15 +10,27 @@ This system enables organizations to analyze sales performance, customer behavio
 
 ## Project Objectives
 
-The objective of this project is to build a scalable batch ETL pipeline for an e-commerce sales analytics system that can efficiently handle large volumes of data. The pipeline processes raw transactional data stored in Amazon S3 and uses PySpark on Databricks to perform data cleaning, transformation, and validation to ensure high data quality. The project also focuses on designing an analytics-ready star schema model that makes it easier to analyze data and run queries. Using SQL, the pipeline generates useful business insights and dashboards such as sales trends, customer behavior, and product performance. Finally, the entire pipeline is automated using Databricks Workflows, enabling smooth, scheduled, and reliable execution without manual intervention.
+## 🎯 Project Objectives
+
+- The goal of this project is to build a **scalable, reliable, and production-ready batch ETL pipeline** for e-commerce sales analytics capable of handling large volumes of data efficiently.
+
+- The pipeline is designed to ensure **high data quality, fault tolerance, and consistency**, enabling trusted and accurate data for business decision-making.
+
+- It aims to deliver **analytics-ready datasets using a structured data model**, supporting efficient querying and performance optimization.
+
+- The project focuses on generating **actionable business insights** such as sales trends, customer behavior, and product performance.
+
+- It also emphasizes **end-to-end automation and monitoring**, ensuring smooth, scheduled, and reliable pipeline execution.
 
 ---
 
-## System Architecture
+## Lakehouse Architecture
 
 The pipeline follows a modern Lakehouse Data Engineering Architecture.
 
-![e-commerce system architecture](https://github.com/user-attachments/assets/5c83014e-8ffb-4c2a-82ed-f702183537dc)
+
+
+![object_remover-1773815864000](https://github.com/user-attachments/assets/1eff00c1-4bec-42e3-8162-ce8b6e37844d)
 
 ---
 
@@ -92,186 +102,275 @@ Example Bronze Tables:
 
 ### Silver Layer – Data Cleaning and Transformation
 
-Purpose:
+**Purpose:**  
 Create clean and standardized datasets.
 
-Transformations include:
+**Transformations include:**
 
-- Remove duplicate records
-- Handle missing values
-- Convert timestamp formats
-- Standardize column formats
-- Perform data validation checks
-- Join related datasets
+- Remove duplicate records  
+- Handle missing values  
+- Convert timestamp formats  
+- Standardize column formats  
+- Perform data validation checks  
+- Join related datasets  
+- Apply data type casting  
+- Trim whitespace and handle invalid characters  
+- Add metadata columns (`processed_timestamp`, `data_quality_flag`)  
 
-Example Silver Tables:
+**Quarantine Handling:**
+
+- Invalid or malformed records are not deleted  
+- Stored in separate **quarantine tables** for analysis  
+- Helps in:
+  - Debugging data issues  
+  - Maintaining data integrity  
+  - Avoiding data loss  
+
+---
+
+**Example Silver Tables:**
+
 | Silver Tables |
 |---------------|
-| customers_clean |
-| orders_clean |
-| order_items_clean |
-| payments_clean |
-| products_clean |
-| sellers_clean |
+| customers |
+| orders |
+| order_items |
+| payments |
+| products |
+| product_category_translation |
+| sellers |
 
+---
 
+**Quarantine Tables:**
+
+| Quarantine Tables |
+|------------------|
+| customer_quarantine_data |
+| orders_quarantine_data |
+| order_items_quarantine_data |
+| payments_quarantine_data |
+| products_quarantine_data |
+| sellers_quarantine_data |
 
 ---
 
 ### Gold Layer – Analytics Data Model
 
-Purpose:
+**Purpose:**  
 Create an analytics-ready star schema for business intelligence.
 
-| Table Type | Table Name |
-|-----------|------------|
-| Fact Table | fact_sales |
-| Dimension | dim_customers |
-| Dimension | dim_products |
-| Dimension | dim_sellers |
-| Dimension | dim_orders |
-| Dimension | dim_date |
+| Table Type   | Table Name     |
+|-------------|----------------|
+| Fact Table  | fact_orders    |
+| Fact Table  | fact_payments  |
+| Fact Table  | fact_sales     |
+| Dimension   | dim_customers  |
+| Dimension   | dim_products   |
+| Dimension   | dim_sellers    |
+| Dimension   | dim_date       |
 
+---
 
+**SCD Type 2 Implementation (dim_customers):**
+
+- Implemented **Slowly Changing Dimension (SCD Type 2)** to track historical changes in customer data.
+
+- Instead of updating records, new records are inserted when changes occur.
+
+- Key columns used:
+  - `customer_key` (surrogate key)
+  - `effective_start_date`
+  - `effective_end_date`
+  - `is_current`
+
+- Logic:
+  - Existing record → marked as inactive (`is_current = false`)
+  - New record → inserted with updated values (`is_current = true`)
+
+- Benefits:
+  - Maintains full history of customer changes  
+  - Enables time-based and trend analysis  
+  - Supports accurate business reporting  
+
+---
 
 The Gold layer supports analytical queries such as revenue analysis, customer behavior analysis, and seller performance evaluation.
+---
+
+##  Business Insights Generated
+
+The pipeline generates business-ready insights from the Gold layer, structured into three key dashboards.
 
 ---
 
-## Business Insights Generated
+###  Sales Performance Insights
 
-The pipeline enables approximately 15 business insights categorized into three analytics levels.
+- Revenue Trend Analysis (Daily / Monthly)
+- Total Orders and Sales Volume
+- Top Selling Products by Revenue
+- Revenue by Product Category
+- Regional Sales Distribution
 
-### Descriptive Analytics
-
-- Total revenue trend
-- Total orders per day
-- Top selling products
-- Sales by product category
-- Customer distribution by region
-
-### Diagnostic Analytics
-
-- Customer purchase frequency
-- Average order value
-- Seller performance analysis
-- Delivery performance
-- Shipping cost impact
-
-### Strategic / Predictive Analytics
-
-- Customer lifetime value (CLV)
-- Customer segmentation
-- Product affinity analysis
-- Demand forecasting
-- Customer churn detection
 
 ---
 
-## Analytics Dashboards
+###  Customer Analytics Insights
 
-The Gold layer supports multiple business dashboards.
+- Customer Lifetime Value (CLV)
+- Repeat vs New Customer Analysis
+- Customer Purchase Frequency
+- Average Order Value (AOV)
+- Customer Segmentation (Behavior & Region)
 
-### Sales Performance Dashboard
-
-Key metrics:
-
-- Total revenue
-- Total orders
-- Average order value
-- Top selling products
-- Revenue by category
-
-### Customer Analytics Dashboard
-
-Key metrics:
-
-- Customer lifetime value
-- Repeat customers
-- Purchase frequency
-- Customer segmentation
-
-### Strategic Insights Dashboard
-
-Key metrics:
-
-- Demand forecasting
-- Customer churn analysis
-- Product affinity insights
 
 ---
 
-## Pipeline Automation
+###  Strategic Insights
 
-The pipeline execution is automated using Databricks Workflows.
+- Demand Forecasting Trends
+- Customer Churn Analysis
+- Product Affinity (Market Basket Analysis)
+- Seller Performance Evaluation
+- Delivery and Fulfillment Performance
 
-Schedule:
-Daily Batch Job
-Time: 3 AM UTC
-
-
-Workflow tasks include:
-
-1. Bronze ingestion
-2. Silver transformation
-3. Gold modeling
-4. Data quality checks
-5. Analytics table refresh
 
 ---
 
-## Data Quality and Monitoring
+##  Analytics Dashboards
 
-The pipeline includes several data quality validation checks.
-
-- Record count validation
-- Schema validation
-- Null value checks
-- Duplicate detection
-- Data anomaly detection
-
-Errors and pipeline issues are logged in:
-ecommerce_catalog.logs.etl_errors
-
-
-
-Alerts are triggered for job failures or abnormal data patterns.
+The Gold layer supports multiple business dashboards designed for different stakeholders.
 
 ---
 
-## My Role in the Project
+###  Sales Performance Dashboard
 
-Role:
-Project Lead and Data Quality / Pipeline Orchestration Engineer
+**Key Metrics:**
 
-Responsibilities:
+- Total Revenue  
+- Total Orders  
+- Average Order Value (AOV)  
+- Top Selling Products  
+- Revenue by Category  
+- Regional Sales  
+<img width="4000" height="4422" alt="d855994d-1" src="https://github.com/user-attachments/assets/39eb0c73-8efc-4260-9ae5-8412c0771359" />
+---
 
-- Led the development of the end-to-end e-commerce analytics pipeline
-- Implemented data quality monitoring and validation checks
-- Managed Bronze, Silver, and Gold layer validation
-- Configured pipeline scheduling using Databricks Workflows
-- Performed advanced transformations using dbt and PySpark
-- Validated business insights generated from the Gold analytics layer
+###  Customer Analytics Dashboard
+
+**Key Metrics:**
+
+- Customer Lifetime Value (CLV)  
+- Repeat Customers  
+- Purchase Frequency  
+- Customer Segmentation  
+<img width="4000" height="3339" alt="e58d4cf5-1" src="https://github.com/user-attachments/assets/284e49a2-a623-49f0-9ecf-1b3062e9a426" />
 
 ---
 
-## Key Project Outcomes
+###  Strategic Insights Dashboard
 
-- Built a scalable lakehouse data pipeline
-- Implemented Medallion Architecture
-- Designed star schema data warehouse model
-- Enabled business-ready analytics datasets
-- Automated daily ETL pipeline execution
+**Key Metrics:**
+
+- Demand Forecasting  
+- Customer Churn Analysis  
+- Product Affinity Insights  
+- Seller Performance  
+- Delivery Performance  
+![Strategic_Insights_Dashboard 2026-03-19 09_37_page-0001](https://github.com/user-attachments/assets/4e2bd730-b8ce-4187-95e7-15c1cc2b23a1)
+---
+
+##  Pipeline Automation
+
+The pipeline execution is automated using **Databricks Workflows and AWS Airflow** to ensure reliable and scheduled processing.
+
+**Schedule:**  
+Daily Batch Job  
+Time: 3 AM UTC  
+
+**Workflow Design:**
+
+- Created a **Databricks Job** where each notebook is configured as an individual task:
+  - Bronze ingestion notebook  
+  - Silver transformation notebook  
+  - Gold modeling notebook  
+  - Data validation and quality checks  
+
+- Defined task dependencies to ensure proper execution order across layers.
+
+- Integrated **AWS Airflow** to orchestrate the Databricks job:
+  - Airflow triggers the Databricks workflow  
+  - Manages scheduling and pipeline execution  
+  - Ensures end-to-end orchestration across all stages  
+
+- Configured **Slack alerts** for real-time notifications:
+  - Job success/failure alerts  
+  - Data quality issue alerts  
+  - Pipeline failure monitoring  
 
 ---
 
-## Future Improvements
+**Workflow tasks include:**
 
-- Integrate real-time streaming data ingestion
-- Implement machine learning-based demand forecasting
-- Deploy dashboards using Power BI or Streamlit
-- Implement CI/CD for data pipelines
+1. Data ingestion from AWS S3 (Raw Zone)  
+2. Bronze layer creation (Delta tables)  
+3. Silver layer transformation (data cleaning, validation, quarantine handling)  
+4. Gold layer modeling (Star Schema + SCD Type 2)  
+5. Data quality checks and validation  
+6. Analytics table preparation for dashboards  
+
 ---
+
+##  Data Quality and Monitoring
+
+The pipeline implements strong **data quality and monitoring mechanisms** to ensure reliability and accuracy.
+
+**Data Quality Checks:**
+
+- Record count validation  
+- Schema validation  
+- Null value handling and checks  
+- Duplicate detection  
+- Data validation rules (invalid/malformed data detection)  
+
+**Quarantine Handling:**
+
+- Invalid records are stored in **quarantine tables** instead of being dropped  
+- Enables debugging, traceability, and business review  
+
+**Monitoring & Logging:**
+
+- Errors and pipeline issues are logged in:
+  `logs.etl_errors`  
+
+- Alerts are triggered for:
+  - Job failures  
+  - Data quality issues  
+  - Pipeline anomalies  
+
+---
+
+##  Key Project Outcomes
+
+- Built a **scalable lakehouse data pipeline** using AWS S3 and Databricks  
+- Implemented **Medallion Architecture (Bronze, Silver, Gold)** for structured data processing  
+- Developed **robust data quality framework** with validation and quarantine handling  
+- Designed an **analytics-ready Star Schema model** with SCD Type 2 implementation  
+- Enabled **business-ready insights and dashboards** for analytics use cases  
+- Automated the pipeline using **Databricks Workflows and Airflow** for reliable execution  
+
+---
+
+##  Future Improvements
+
+- Integrate **real-time streaming ingestion** using Spark Structured Streaming  
+- Enhance analytics with **advanced forecasting and ML models**  
+- Deploy dashboards using **Power BI / Databricks SQL dashboards**  
+- Implement **CI/CD pipelines** for automated testing and deployment  
+- Add **data lineage and governance** using Unity Catalog enhancements  
+
+---
+
 ## Conclusion
 
 This project demonstrates how a modern data engineering pipeline can transform raw e-commerce data into reliable analytics datasets and business insights using the Lakehouse architecture.
