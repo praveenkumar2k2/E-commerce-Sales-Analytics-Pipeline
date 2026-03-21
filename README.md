@@ -10,8 +10,6 @@ This system enables organizations to analyze sales performance, customer behavio
 
 ## Project Objectives
 
-## 🎯 Project Objectives
-
 - The goal of this project is to build a **scalable, reliable, and production-ready batch ETL pipeline** for e-commerce sales analytics capable of handling large volumes of data efficiently.
 
 - The pipeline is designed to ensure **high data quality, fault tolerance, and consistency**, enabling trusted and accurate data for business decision-making.
